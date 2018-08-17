@@ -6,14 +6,27 @@ if [[ ! -z $APT ]]; then
 	sudo apt update -y
 	sudo apt install -y vim git curl wget
 	sudo apt install -y neovim python-pip python3-pip tmux
+        sudo apt install qemu-kvm libvirt-clients libvirt-daemon-system
+        sudo apt install -y libguestfs-tools
 elif [[ ! -z $DNF ]]; then
 	sudo dnf update -y
 	sudo dnf install -y vim git curl wget
 	sudo dnf install -y neovim python-pip python3-pip tmux
+	sudo dnf group install -y virtualization
 else
 	echo "unsupported package manager"
 	exit 1;
 fi
+
+sudo gpasswd -a "${USER}" libvirt
+sudo modprobe -r kvm_intel
+sudo modprobe kvm_intel nested=1
+
+# Frankly I never remember which is right on which systems, so just set them both
+echo "options kvm_intel nested=1" | \
+  sudo tee /etc/modprobe.d/kvm.conf
+echo "options kvm_intel nested=1" | \
+  sudo tee /etc/modprobe.d/qemu-system-x86.conf
 
 curl -fsSL get.docker.com -o get-docker.sh
 sh get-docker.sh
